@@ -1,9 +1,5 @@
 pub fn part_one(input: &str) -> isize {
-    input.chars().fold(0, |acc, brace| match brace {
-        '(' => acc + 1,
-        ')' => acc - 1,
-        _ => acc,
-    })
+    input.chars().fold(0, move_floor)
 }
 
 pub fn part_two(input: &str) -> isize {
