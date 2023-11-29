@@ -3,16 +3,14 @@ pub fn part_one(input: &str) -> isize {
 }
 
 pub fn part_two(input: &str) -> isize {
-    let mut position = 1;
     let mut floor = 0;
-    for brace in input.chars() {
+    for (position, brace) in input.chars().enumerate() {
         floor = move_floor(floor, brace);
         if floor == -1 {
-            break;
+            return position as isize + 1;
         }
-        position += 1;
     }
-    position
+    0
 }
 
 fn move_floor(floor: isize, brace: char) -> isize {
