@@ -1,4 +1,4 @@
-use std::{collections::HashMap, hash::Hasher, str::FromStr};
+use std::{collections::HashMap, str::FromStr};
 
 use nom::{
     bytes::complete::tag,
@@ -48,33 +48,37 @@ pub fn part_one(input: &str) -> usize {
             sum += game.id
         }
     }
-
     sum
 }
 
+#[derive(Default, Debug)]
+struct MaxTracker {
+    blue: usize,
+    green: usize,
+    red: usize,
+}
+
 pub fn part_two(input: &str) -> usize {
-    let mut sum = 0;
-    for line in input.lines() {
-        let mut state = HashMap::<Color, usize>::new();
-        let (_, game) = parse_game(line).unwrap();
-        for r#match in game.matches {
-            for round in r#match {
-                if let Some(&num) = state.get(&round.1) {
-                    if num < round.0 {
-                        state.insert(round.1, round.0);
-                    }
-                } else {
-                    state.insert(round.1, round.0);
-                }
-            }
-        }
-        println!("{:?}", state);
-        sum += state
-            .into_values()
-            .reduce(|acc, value| acc * value)
-            .unwrap_or(0);
-    }
-    sum
+    input
+        .lines()
+        .map(|line| {
+            let (_, game) = parse_game(line).unwrap();
+            let tracker = game
+                .matches
+                .into_iter()
+                .fold(MaxTracker::default(), |acc, r#match| {
+                    r#match.into_iter().fold(acc, |mut acc, round| {
+                        match round {
+                            (num, Color::Blue) => acc.blue = acc.blue.max(num),
+                            (num, Color::Green) => acc.green = acc.green.max(num),
+                            (num, Color::Red) => acc.red = acc.red.max(num),
+                        };
+                        acc
+                    })
+                });
+            tracker.blue * tracker.green * tracker.red
+        })
+        .sum()
 }
 
 fn is_possible(round: &(usize, Color)) -> bool {
@@ -96,8 +100,8 @@ fn parse_game(input: &str) -> IResult<&str, Game> {
 }
 
 fn parse_match(input: &str) -> IResult<&str, Vec<(usize, Color)>> {
-    let parse_roll = terminated(tuple((ws(digit1), ws(alpha1))), opt(char(',')));
-    let (rest, colors) = terminated(many0(parse_roll), opt(char(';')))(input)?;
+    let parse_round = terminated(tuple((ws(digit1), ws(alpha1))), opt(char(',')));
+    let (rest, colors) = terminated(many0(parse_round), opt(char(';')))(input)?;
     let r#match: Vec<(usize, Color)> = colors
         .iter()
         .map(|(num, color)| {
@@ -154,6 +158,6 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green"#;
     fn part_two_test() {
         let input = include_str!("../resources/day2_part1");
         let result = part_two(input);
-        assert_eq!(result, 2286);
+        assert_eq!(result, 66363);
     }
 }
