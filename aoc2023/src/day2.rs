@@ -114,9 +114,11 @@ fn parse_match(input: &str) -> IResult<&str, Vec<(usize, Color)>> {
     Ok((rest, r#match))
 }
 
-fn ws<'a, F, O, E: ParseError<&'a str>>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
+fn ws<'a, F: 'a, O, E: ParseError<&'a str>>(
+    inner: F,
+) -> impl FnMut(&'a str) -> IResult<&'a str, O, E>
 where
-    F: Parser<&'a str, O, E>,
+    F: Fn(&'a str) -> IResult<&'a str, O, E>,
 {
     delimited(multispace0, inner, multispace0)
 }
