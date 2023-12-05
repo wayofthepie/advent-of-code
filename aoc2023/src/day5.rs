@@ -1,7 +1,7 @@
 use nom::{
     branch::alt,
     bytes::complete::tag,
-    character::complete::{digit1, newline},
+    character::complete::{digit1, newline, space1},
     combinator::eof,
     multi::{many_till, separated_list1},
     sequence::tuple,
@@ -11,14 +11,14 @@ use rayon::prelude::*;
 
 use crate::ws;
 
+type MappingRange = Vec<Vec<Vec<usize>>>;
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 struct RangeMap {
     src: isize,
     dest: isize,
     len: isize,
 }
-
-type MappingRanges = Vec<Vec<Vec<usize>>>;
 
 impl RangeMap {
     fn new(src: isize, dest: isize, len: isize) -> Self {
@@ -84,20 +84,13 @@ fn seeds_and_steps(input: &str) -> (Vec<usize>, Vec<Vec<RangeMap>>) {
                 })
                 .collect()
         })
-        .collect::<Vec<Vec<RangeMap>>>();
+        .collect();
     (seeds, steps)
 }
 
-fn parse(input: &str) -> IResult<&str, (Vec<usize>, MappingRanges)> {
-    let (rest, seeds) = parse_seeds(input)?;
-    let (rest, (mappings, _)) = many_till(ws(parse_ranges), eof)(rest)?;
-    let mappings = mappings
-        .into_iter()
-        .reduce(|mut acc, m| {
-            acc.extend(m);
-            acc
-        })
-        .unwrap();
+fn parse(input: &str) -> IResult<&str, (Vec<usize>, MappingRange)> {
+    let (rest, (seeds, (mappings, _))) =
+        tuple((parse_seeds, many_till(ws(parse_ranges), eof)))(input)?;
     Ok((rest, (seeds, mappings)))
 }
 
@@ -107,12 +100,12 @@ fn parse_seeds(input: &str) -> IResult<&str, Vec<usize>> {
     let nums = nums
         .into_iter()
         .map(|num| num.parse::<usize>().unwrap())
-        .collect::<Vec<usize>>();
+        .collect();
     Ok((rest, nums))
 }
 
-fn parse_ranges(input: &str) -> IResult<&str, MappingRanges> {
-    let parse_id = alt((
+fn parse_ranges(input: &str) -> IResult<&str, Vec<Vec<usize>>> {
+    let parse_ids = alt((
         tag("seed-to-soil"),
         tag("soil-to-fertilizer"),
         tag("fertilizer-to-water"),
@@ -122,9 +115,9 @@ fn parse_ranges(input: &str) -> IResult<&str, MappingRanges> {
         tag("humidity-to-location"),
     ));
     let (rest, (_, _, ranges)) = tuple((
-        parse_id,
+        parse_ids,
         ws(tag("map:")),
-        separated_list1(newline, separated_list1(tag(" "), digit1)),
+        separated_list1(newline, separated_list1(space1, digit1)),
     ))(input)?;
     let ranges = ranges
         .into_iter()
@@ -132,10 +125,10 @@ fn parse_ranges(input: &str) -> IResult<&str, MappingRanges> {
             entry
                 .into_iter()
                 .map(|num| num.parse::<usize>().unwrap())
-                .collect::<Vec<usize>>()
+                .collect()
         })
-        .collect::<Vec<Vec<usize>>>();
-    Ok((rest, vec![ranges]))
+        .collect();
+    Ok((rest, ranges))
 }
 
 #[cfg(test)]
