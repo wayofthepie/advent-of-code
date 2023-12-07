@@ -1,4 +1,7 @@
-use std::{cmp::Ordering, collections::HashMap};
+use std::{
+    cmp::{Ordering, Reverse},
+    collections::HashMap,
+};
 
 pub fn part_one(input: &str) -> usize {
     compute(input, Card::Card)
@@ -106,26 +109,28 @@ const HIGH_CARD: usize = 0;
 
 fn apply_rules(hand: &Hand) -> usize {
     let mut mapped = map_cards(&hand.0);
-    mapped.sort_by(|(_, left), (_, right)| left.cmp(right).reverse());
-    match mapped.as_slice() {
-        [(_, _)] => FIVE_OF_A_KIND,
-        [(&x, _), (&y, _)] if contains_j(&[x, y]) => FIVE_OF_A_KIND,
-        [(_, 4), (_, _)] => FOUR_OF_A_KIND,
-        [(&x, 3), (&y, 1), (&z, 1)] if contains_j(&[x, y, z]) => FOUR_OF_A_KIND,
-        [(&x, 2), (&y, 2), (_, 1)] if contains_j(&[x, y]) => FOUR_OF_A_KIND,
-        [(_, 3), (_, 2)] => FULL_HOUSE,
-        [(_, 2), (_, 2), (&z, 1)] if z == J => FULL_HOUSE,
-        [(_, 3), (_, 1), (_, 1)] => THREE_OF_A_KIND,
-        [(&r, 2), (&x, 1), (&y, 1), (&z, 1)] if contains_j(&[r, x, y, z]) => THREE_OF_A_KIND,
-        [(_, 2), (_, 2), ..] => TWO_PAIR,
-        [(_, 2), ..] => ONE_PAIR,
-        [(&q, 1), (&r, 1), (&x, 1), (&y, 1), (&z, 1)] if contains_j(&[q, r, x, y, z]) => ONE_PAIR,
-        _ => HIGH_CARD,
-    }
-}
-
-fn contains_j(list: &[Card]) -> bool {
-    list.contains(&J)
+    mapped.sort_by_key(|hand| Reverse(hand.1));
+    mapped
+        .iter()
+        .find(|(&card, _)| card == J)
+        .map(|_| match mapped.as_slice() {
+            [(_, _)] | [(_, _), (_, _)] => FIVE_OF_A_KIND,
+            [(_, 3), ..] => FOUR_OF_A_KIND,
+            [(_, 2), (_, 2), (&z, 1)] if z != J => FOUR_OF_A_KIND,
+            [(_, 2), (_, 2), (_, 1)] => FULL_HOUSE,
+            [(_, 2), (_, 1), (_, 1), (_, 1)] => THREE_OF_A_KIND,
+            [(_, 1), (_, 1), (_, 1), (_, 1), (_, 1)] => ONE_PAIR,
+            _ => HIGH_CARD,
+        })
+        .unwrap_or(match mapped.as_slice() {
+            [(_, _)] => FIVE_OF_A_KIND,
+            [(_, 4), (_, _)] => FOUR_OF_A_KIND,
+            [(_, 3), (_, 2)] => FULL_HOUSE,
+            [(_, 3), (_, 1), (_, 1)] => THREE_OF_A_KIND,
+            [(_, 2), (_, 2), ..] => TWO_PAIR,
+            [(_, 2), ..] => ONE_PAIR,
+            _ => HIGH_CARD,
+        })
 }
 
 fn map_cards(cards: &[Card]) -> Vec<(&Card, usize)> {
