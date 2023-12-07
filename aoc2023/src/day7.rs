@@ -73,8 +73,8 @@ struct Hand(Vec<Card>);
 
 impl Ord for Hand {
     fn cmp(&self, other: &Self) -> Ordering {
-        let this_rank = Rules::apply(self);
-        let other_rank = Rules::apply(other);
+        let this_rank = apply_rules(self);
+        let other_rank = apply_rules(other);
         match this_rank.cmp(&other_rank) {
             Ordering::Equal => self
                 .0
@@ -104,29 +104,23 @@ const TWO_PAIR: usize = 2;
 const ONE_PAIR: usize = 1;
 const HIGH_CARD: usize = 0;
 
-struct Rules;
-
-impl Rules {
-    fn apply(hand: &Hand) -> usize {
-        let mut mapped = map_cards(&hand.0);
-        mapped.sort_by(|(_, left), (_, right)| left.cmp(right).reverse());
-        match mapped.as_slice() {
-            [(_, _)] => FIVE_OF_A_KIND,
-            [(&x, _), (&y, _)] if contains_j(&[x, y]) => FIVE_OF_A_KIND,
-            [(_, 4), (_, _)] => FOUR_OF_A_KIND,
-            [(&x, 3), (&y, 1), (&z, 1)] if contains_j(&[x, y, z]) => FOUR_OF_A_KIND,
-            [(&x, 2), (&y, 2), (_, 1)] if contains_j(&[x, y]) => FOUR_OF_A_KIND,
-            [(_, 3), (_, 2)] => FULL_HOUSE,
-            [(_, 2), (_, 2), (&z, 1)] if z == J => FULL_HOUSE,
-            [(_, 3), (_, 1), (_, 1)] => THREE_OF_A_KIND,
-            [(&r, 2), (&x, 1), (&y, 1), (&z, 1)] if contains_j(&[r, x, y, z]) => THREE_OF_A_KIND,
-            [(_, 2), (_, 2), ..] => TWO_PAIR,
-            [(_, 2), ..] => ONE_PAIR,
-            [(&q, 1), (&r, 1), (&x, 1), (&y, 1), (&z, 1)] if contains_j(&[q, r, x, y, z]) => {
-                ONE_PAIR
-            }
-            _ => HIGH_CARD,
-        }
+fn apply_rules(hand: &Hand) -> usize {
+    let mut mapped = map_cards(&hand.0);
+    mapped.sort_by(|(_, left), (_, right)| left.cmp(right).reverse());
+    match mapped.as_slice() {
+        [(_, _)] => FIVE_OF_A_KIND,
+        [(&x, _), (&y, _)] if contains_j(&[x, y]) => FIVE_OF_A_KIND,
+        [(_, 4), (_, _)] => FOUR_OF_A_KIND,
+        [(&x, 3), (&y, 1), (&z, 1)] if contains_j(&[x, y, z]) => FOUR_OF_A_KIND,
+        [(&x, 2), (&y, 2), (_, 1)] if contains_j(&[x, y]) => FOUR_OF_A_KIND,
+        [(_, 3), (_, 2)] => FULL_HOUSE,
+        [(_, 2), (_, 2), (&z, 1)] if z == J => FULL_HOUSE,
+        [(_, 3), (_, 1), (_, 1)] => THREE_OF_A_KIND,
+        [(&r, 2), (&x, 1), (&y, 1), (&z, 1)] if contains_j(&[r, x, y, z]) => THREE_OF_A_KIND,
+        [(_, 2), (_, 2), ..] => TWO_PAIR,
+        [(_, 2), ..] => ONE_PAIR,
+        [(&q, 1), (&r, 1), (&x, 1), (&y, 1), (&z, 1)] if contains_j(&[q, r, x, y, z]) => ONE_PAIR,
+        _ => HIGH_CARD,
     }
 }
 
@@ -241,41 +235,41 @@ QQQJA 483"#;
     fn should_give_correct_rank_with_wildcard_rules() {
         let hand = "JJQQQ";
         let hand = Hand(hand.chars().map(Card::Wildcard).collect());
-        assert_eq!(Rules::apply(&hand), 6);
+        assert_eq!(apply_rules(&hand), 6);
     }
 
     #[test]
     fn should_be_full_house_with_wildcard_rules() {
         let hand = "33QQQ";
         let hand = Hand(hand.chars().map(Card::Wildcard).collect());
-        assert_eq!(Rules::apply(&hand), 4);
+        assert_eq!(apply_rules(&hand), 4);
     }
 
     #[test]
     fn should_be_three_of_a_kind_with_wildcard_rules() {
         let hand = "3KJJQ";
         let hand = Hand(hand.chars().map(Card::Wildcard).collect());
-        assert_eq!(Rules::apply(&hand), 3);
+        assert_eq!(apply_rules(&hand), 3);
     }
 
     #[test]
     fn should_be_two_pair_with_wildcard_rules() {
         let hand = "3KQQK";
         let hand = Hand(hand.chars().map(Card::Wildcard).collect());
-        assert_eq!(Rules::apply(&hand), 2);
+        assert_eq!(apply_rules(&hand), 2);
     }
 
     #[test]
     fn should_be_one_pair_with_wildcard_rules() {
         let hand = "J4729";
         let hand = Hand(hand.chars().map(Card::Wildcard).collect());
-        assert_eq!(Rules::apply(&hand), 1);
+        assert_eq!(apply_rules(&hand), 1);
     }
 
     #[test]
     fn should_be_high_card_with_wildcard_rules() {
         let hand = "3KQT1";
         let hand = Hand(hand.chars().map(Card::Wildcard).collect());
-        assert_eq!(Rules::apply(&hand), 0);
+        assert_eq!(apply_rules(&hand), 0);
     }
 }
