@@ -6,6 +6,7 @@ pub mod day3;
 pub mod day4;
 pub mod day5;
 pub mod day6;
+pub mod day7;
 
 fn ws<'a, F: 'a, O, E: ParseError<&'a str>>(
     inner: F,

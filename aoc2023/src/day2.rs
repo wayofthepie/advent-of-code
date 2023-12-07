@@ -1,4 +1,4 @@
-use std::{collections::HashMap, str::FromStr};
+use std::str::FromStr;
 
 use nom::{
     bytes::complete::tag,
@@ -7,7 +7,7 @@ use nom::{
     error::ParseError,
     multi::{many0, many_till},
     sequence::{delimited, terminated, tuple},
-    IResult, Parser,
+    IResult,
 };
 
 #[derive(Debug)]
