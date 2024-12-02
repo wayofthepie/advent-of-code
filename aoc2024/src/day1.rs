@@ -1,6 +1,30 @@
+use std::collections::HashMap;
+
 pub fn day1_part1(input: &str) -> isize {
     let (left, right) = read_input(input);
     left.iter().zip(right).map(|(l, r)| (l - r).abs()).sum()
+}
+
+pub fn day1_part2(input: &str) -> isize {
+    let (left, right) = read_input(input);
+    let frequency = right
+        .iter()
+        .fold(HashMap::<isize, usize>::new(), |mut acc, num| {
+            acc.entry(*num)
+                .and_modify(|num| {
+                    *num += 1;
+                })
+                .or_insert(1);
+            acc
+        });
+
+    let mut total = 0;
+    for left_num in left.iter() {
+        if let Some(&count) = frequency.get(left_num) {
+            total += left_num * count as isize;
+        }
+    }
+    total
 }
 
 fn read_input(input: &str) -> (Vec<isize>, Vec<isize>) {
@@ -24,6 +48,8 @@ fn read_input(input: &str) -> (Vec<isize>, Vec<isize>) {
 mod test {
     use std::time::SystemTime;
 
+    use crate::day1::day1_part2;
+
     use super::day1_part1;
 
     #[test]
@@ -45,7 +71,30 @@ mod test {
         let result = day1_part1(input);
         let end = SystemTime::now();
         let duration = end.duration_since(start).unwrap();
-        println!("it took {}ms", duration.as_micros());
+        println!("it took {}µs", duration.as_micros());
         assert_eq!(result, 1341714)
+    }
+
+    #[test]
+    fn example_day1_part2() {
+        let input = r#"3   4
+4   3
+2   5
+1   3
+3   9
+3   3"#;
+        let result = day1_part2(input);
+        assert_eq!(result, 31)
+    }
+
+    #[test]
+    fn actual_day1_part2() {
+        let input = include_str!("../resources/day1_part1");
+        let start = SystemTime::now();
+        let result = day1_part2(input);
+        let end = SystemTime::now();
+        let duration = end.duration_since(start).unwrap();
+        println!("it took {}µs", duration.as_micros());
+        assert_eq!(result, 27384707)
     }
 }
