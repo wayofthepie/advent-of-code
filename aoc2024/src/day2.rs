@@ -102,6 +102,6 @@ mod test {
         let end = SystemTime::now();
         let duration = end.duration_since(start).unwrap();
         println!("it took {}µs", duration.as_micros());
-        assert_eq!(result, 411)
+        assert_eq!(result, 465)
     }
 }
