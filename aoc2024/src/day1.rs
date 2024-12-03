@@ -46,11 +46,8 @@ fn read_input(input: &str) -> (Vec<isize>, Vec<isize>) {
 
 #[cfg(test)]
 mod test {
+    use super::{day1_part1, day1_part2};
     use std::time::SystemTime;
-
-    use crate::day1::day1_part2;
-
-    use super::day1_part1;
 
     #[test]
     fn example_day1_part1() {
